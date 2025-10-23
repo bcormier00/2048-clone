@@ -86,18 +86,18 @@ function getNewCell() {
 
 function getCellColour(cellValue) {
     switch (cellValue) {
-        case 2: return "bg-amber-500"
-        case 4: return "bg-green-500"
-        case 8: return "bg-red-500"
-        case 16: return "bg-red-600"
-        case 32: return "bg-red-600"
-        case 64: return "bg-red-600"
-        case 128: return "bg-red-600"
-        case 256: return "bg-red-600"
-        case 512: return "bg-red-600"
-        case 1024: return "bg-red-600"
-        case 2048: return "bg-red-600"
-        default: return "bg-gray-400"
+        case 2: return "bg-2048-2"
+        case 4: return "bg-2048-4"
+        case 8: return "bg-2048-8"
+        case 16: return "bg-2048-16"
+        case 32: return "bg-2048-32"
+        case 64: return "bg-2048-64"
+        case 128: return "bg-2048-128"
+        case 256: return "bg-2048-256"
+        case 512: return "bg-2048-512"
+        case 1024: return "bg-2048-1024"
+        case 2048: return "bg-2048-2048"
+        default: return "bg-empty-cell inset-shadow-black-2xs"
     }
 }
 function moveUp() {
@@ -221,12 +221,12 @@ function moveRight() {
 </script>
 
 <template>
-    <div class="flex items-center justify-center min-h-screen bg-black">
-        <div class="grid grid-cols-4 grid-rows-4 border-2  w-[500px] h-[500px]">
+    <div class="flex items-center justify-center min-h-screen ">
+        <div class="grid grid-cols-4 grid-rows-4 shadow-lg rounded-lg p-2 gap-2 w-[500px] h-[500px] bg-board">
             <div
                 v-for="(cell, i) in flatGameArray"
                 :key="i"
-                class="border-2 flex items-center justify-center font-bold "
+                class="flex items-center justify-center font-bold rounded-lg "
                 :class="getCellColour(cell)"
             >
                 {{ cell }}
