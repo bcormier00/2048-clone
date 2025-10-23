@@ -3,11 +3,18 @@
 import {computed, onBeforeUnmount, ref} from "vue";
 import {onMounted} from "vue";
 
+// const gameOverScenario = [
+//     [2, 4, 8, 2048],
+//     [32, 8, 4, 128],
+//     [128, 2, 8, 16],
+//     [512, 1024, 32, 2048],
+// ]
+
 const gameArray = ref([
-    [2, undefined, undefined, undefined],
-    [2, undefined, undefined, undefined],
-    [undefined, undefined, undefined, undefined],
-    [undefined, undefined, undefined, undefined],
+    [2, 4, 8, 2048],
+    [32, 8, 4, 128],
+    [128, 2, 8, 16],
+    [512, 1024, 32, 2048],
 ])
 
 onMounted(() => {
@@ -41,25 +48,32 @@ function handleKeydown(event) {
     if (tilesMoved) {
         spawnTile()
     }
-    isGameOver()
+    // isGameOver()
 }
 
-function isGameOver() {
+ const isGameOver = computed(() => {
     gameArray.value.forEach((row, rowIndex) => {
+        console.log('row each')
         row.forEach((cell, colIndex) => {
+            console.log('col each')
+            // check if cell is empty first
             if(checkNeighbourCellsForMerge(rowIndex, colIndex)) {
                 return true
             }
         })
     })
     return false
-}
+});
 
 function checkNeighbourCellsForMerge(rowIndex, colIndex) {
 
-    const canMoveUp = gameArray.value[rowIndex - 1][colIndex] && gameArray.value[rowIndex - 1][colIndex] === gameArray.value[rowIndex][colIndex]
-    console.log(canMoveUp, 'can you move up?', rowIndex, colIndex)
-    return canMoveUp
+    const canMoveUp = gameArray.value[rowIndex - 1] && gameArray.value[rowIndex - 1][colIndex] && gameArray.value[rowIndex - 1][colIndex] === gameArray.value[rowIndex][colIndex]
+    const canMoveDown = gameArray.value[rowIndex + 1] && gameArray.value[rowIndex + 1][colIndex] && gameArray.value[rowIndex + 1][colIndex] === gameArray.value[rowIndex][colIndex]
+    const canMoveLeft = gameArray.value[rowIndex][colIndex - 1] && gameArray.value[rowIndex][colIndex - 1] === gameArray.value[rowIndex][colIndex]
+    const canMoveRight = gameArray.value[rowIndex][colIndex + 1] && gameArray.value[rowIndex][colIndex + 1] === gameArray.value[rowIndex][colIndex]
+
+    const canMove = (canMoveRight || canMoveLeft || canMoveUp || canMoveDown);
+    return canMove
 }
 
 function spawnTile() {
@@ -222,6 +236,7 @@ function moveRight() {
 
 <template>
     <div class="flex items-center justify-center min-h-screen ">
+        <div v-if="isGameOver" class="text-4xl font-semibold">Game Over!!!</div>
         <div class="grid grid-cols-4 grid-rows-4 shadow-lg rounded-lg p-2 gap-2 w-[500px] h-[500px] bg-board">
             <div
                 v-for="(cell, i) in flatGameArray"
