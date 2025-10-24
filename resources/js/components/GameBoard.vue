@@ -65,6 +65,11 @@ function handleKeydown(event) {
     return false
 });
 
+/**
+ * Possibly move each calculation to determine if the player can move in a direction in a computed property.
+ *  Each computed property can handle the specific task of checking if the player can move in that direction.
+ */
+
 function checkNeighbourCellsForMerge(rowIndex, colIndex) {
 
     const canMoveUp = gameArray.value[rowIndex - 1] && gameArray.value[rowIndex - 1][colIndex] && gameArray.value[rowIndex - 1][colIndex] === gameArray.value[rowIndex][colIndex]
