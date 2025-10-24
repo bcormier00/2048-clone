@@ -11,7 +11,7 @@ import {onMounted} from "vue";
 // ]
 
 const gameArray = ref([
-    [2, 4, 8, 2048],
+    [undefined, undefined, 8, 2048],
     [32, 8, 4, 128],
     [128, 2, 8, 16],
     [512, 1024, 32, 2048],
@@ -26,6 +26,12 @@ onBeforeUnmount(() => {
 })
 
 const flatGameArray = computed(() => gameArray.value.flat())
+
+const isGameOver = computed(() => {
+    console.log(checkForNoAvailableMerges())
+    return  checkForNoAvailableMerges()
+});
+
 let tilesMoved = false
 
 
@@ -48,32 +54,50 @@ function handleKeydown(event) {
     if (tilesMoved) {
         spawnTile()
     }
-    // isGameOver()
 }
 
- const isGameOver = computed(() => {
-    gameArray.value.forEach((row, rowIndex) => {
-        console.log('row each')
-        row.forEach((cell, colIndex) => {
-            console.log('col each')
-            // check if cell is empty first
-            if(checkNeighbourCellsForMerge(rowIndex, colIndex)) {
-                return true
-            }
-        })
-    })
-    return false
-});
+function checkForNoAvailableMerges() {
+    // grab last respective row/column depending on direction to check for merge (up would be bottom row - left would be rightmost column )
+    //loop over each cell in said column/row and check if cell can merge in specified direction
+    // move to next row/col in respect to the direction of the check (checking up merge = move to the next row above)
+    //repeat step 2 and 3
+    // do not need to check last row in respect to direction (up merge does not need to check top row)
 
-function checkNeighbourCellsForMerge(rowIndex, colIndex) {
+    //check up merge
+    for (let i = 3; i > 0; i--) {
+        for (let j = 0; j < 4; j++) {
+            const a = gameArray.value[i][j], b = gameArray.value[i - 1][j]
+            console.log(a, b)
+            if (a === undefined || b === undefined || a === b) return false
+        }
+    }
 
-    const canMoveUp = gameArray.value[rowIndex - 1] && gameArray.value[rowIndex - 1][colIndex] && gameArray.value[rowIndex - 1][colIndex] === gameArray.value[rowIndex][colIndex]
-    const canMoveDown = gameArray.value[rowIndex + 1] && gameArray.value[rowIndex + 1][colIndex] && gameArray.value[rowIndex + 1][colIndex] === gameArray.value[rowIndex][colIndex]
-    const canMoveLeft = gameArray.value[rowIndex][colIndex - 1] && gameArray.value[rowIndex][colIndex - 1] === gameArray.value[rowIndex][colIndex]
-    const canMoveRight = gameArray.value[rowIndex][colIndex + 1] && gameArray.value[rowIndex][colIndex + 1] === gameArray.value[rowIndex][colIndex]
+    // DOWN: compare cell with one below; skip bottom row
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 4; j++) {
+            const a = gameArray.value[i][j], b = gameArray.value[i + 1][j]
+            if (a === undefined || b === undefined || a === b) return false
+        }
+    }
 
-    const canMove = (canMoveRight || canMoveLeft || canMoveUp || canMoveDown);
-    return canMove
+    // LEFT: compare cell with one to the left; skip leftmost col
+    for (let i = 0; i < 4; i++) {
+        for (let j = 3; j > 0; j--) {
+            const a = gameArray.value[i][j], b = gameArray.value[i][j - 1]
+            if (a === undefined || b === undefined || a === b) return false
+        }
+    }
+
+    // RIGHT: compare cell with one to the right; skip rightmost col
+    for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 3; j++) {
+            const a = gameArray.value[i][j], b = gameArray.value[i][j + 1]
+            if (a === undefined || b === undefined || a === b) return false
+        }
+    }
+
+    // no merges anywhere
+    return true
 }
 
 function spawnTile() {
