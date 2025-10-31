@@ -11,10 +11,11 @@ import {onMounted} from "vue";
 // ]
 
 const gameArray = ref([
-    [undefined, undefined, 8, 2048],
-    [32, 8, 4, 128],
-    [128, 2, 8, 16],
-    [512, 1024, 32, 2048],
+    [2, undefined, 2048, 2048],
+    [2, undefined, undefined, undefined],
+    [4, undefined, undefined, undefined],
+    [4, undefined, undefined, undefined],
+
 ])
 
 onMounted(() => {
@@ -28,8 +29,7 @@ onBeforeUnmount(() => {
 const flatGameArray = computed(() => gameArray.value.flat())
 
 const isGameOver = computed(() => {
-    console.log(checkForNoAvailableMerges())
-    return  checkForNoAvailableMerges()
+    return checkForNoAvailableMerges()
 });
 
 let tilesMoved = false
@@ -67,7 +67,7 @@ function checkForNoAvailableMerges() {
     for (let i = 3; i > 0; i--) {
         for (let j = 0; j < 4; j++) {
             const a = gameArray.value[i][j], b = gameArray.value[i - 1][j]
-            console.log(a, b)
+            // console.log(a, b)
             if (a === undefined || b === undefined || a === b) return false
         }
     }
@@ -123,42 +123,61 @@ function getNewCell() {
 }
 
 function getCellColour(cellValue) {
-    switch (cellValue) {
-        case 2: return "bg-2048-2"
-        case 4: return "bg-2048-4"
-        case 8: return "bg-2048-8"
-        case 16: return "bg-2048-16"
-        case 32: return "bg-2048-32"
-        case 64: return "bg-2048-64"
-        case 128: return "bg-2048-128"
-        case 256: return "bg-2048-256"
-        case 512: return "bg-2048-512"
-        case 1024: return "bg-2048-1024"
-        case 2048: return "bg-2048-2048"
-        default: return "bg-empty-cell inset-shadow-black-2xs"
+    let processedCellValue = cellValue
+    if (cellValue > 2048) {
+        processedCellValue = 3000
+    }
+    switch (processedCellValue) {
+        case 2:
+            return "bg-2048-2"
+        case 4:
+            return "bg-2048-4"
+        case 8:
+            return "bg-2048-8"
+        case 16:
+            return "bg-2048-16"
+        case 32:
+            return "bg-2048-32"
+        case 64:
+            return "bg-2048-64"
+        case 128:
+            return "bg-2048-128"
+        case 256:
+            return "bg-2048-256"
+        case 512:
+            return "bg-2048-512"
+        case 1024:
+            return "bg-2048-1024"
+        case 2048:
+            return "bg-2048-2048"
+        case 3000:
+            return "text-white bg-linear-to-tl from-violet-500 to-gold-500 to-red-500"
+        default:
+            return "bg-empty-cell inset-shadow-black-2xs"
     }
 }
+
 function moveUp() {
-    let alreadyMergedColumn = Array.from({ length: 4 }, () => Array(4).fill(false));
+    let alreadyMergedColumn = Array.from({length: 4}, () => Array(4).fill(false));
 
     gameArray.value.forEach((row, rowIndex) => {
         row.forEach((cell, colIndex) => {
-            if(cell && rowIndex !== 0) { //dont care about the first row when moving up
-                for(let i = rowIndex - 1; i >= 0; i--) { //find next available cell for the current one to move/combine with
+            if (cell && rowIndex !== 0) { //dont care about the first row when moving up
+                for (let i = rowIndex - 1; i >= 0; i--) { //find next available cell for the current one to move/combine with
                     if (gameArray.value[i][colIndex] === undefined) {
                         gameArray.value[i][colIndex] = cell // if i cell is undefined, current cell takes that spot
-                        gameArray.value[i+1][colIndex] = undefined
+                        gameArray.value[i + 1][colIndex] = undefined
                         tilesMoved = true
                         continue
                     }
                     if (gameArray.value[i][colIndex] === cell && !alreadyMergedColumn[i][colIndex]) {
                         gameArray.value[i][colIndex] = cell + cell //if i cell is the same as cell, combine
-                        gameArray.value[i+1][colIndex] = undefined
+                        gameArray.value[i + 1][colIndex] = undefined
                         alreadyMergedColumn[i][colIndex] = true
                         tilesMoved = true
                         break
                     }
-                    if(gameArray.value[i][colIndex]) {
+                    if (gameArray.value[i][colIndex]) {
                         break //if i cell is populated, do nothing
                     }
                 }
@@ -166,38 +185,23 @@ function moveUp() {
         })
     })
 }
-function moveDown() {
-    let alreadyMergedColumn = Array.from({ length: 4 }, () => Array(4).fill(false));
 
-    for(let rowIndex = 2; rowIndex >= 0; rowIndex--) {
-        for(let colIndex = 3; colIndex >= 0; colIndex--) {
-            let cell = gameArray.value[rowIndex][colIndex]
-            if(cell && rowIndex !== 3) {
-                for(let i = rowIndex + 1; i <= 3; i++) {
-                    if (gameArray.value[i][colIndex] === undefined) {
-                        gameArray.value[i][colIndex] = cell
-                        gameArray.value[i-1][colIndex] = undefined
-                        tilesMoved = true
-                        continue
-                    }
-                    if (gameArray.value[i][colIndex] === cell && !alreadyMergedColumn[i][colIndex]) {
-                        gameArray.value[i][colIndex] = cell + cell
-                        gameArray.value[i-1][colIndex] = undefined
-                        alreadyMergedColumn[i][colIndex] = true
-                        tilesMoved = true
-                        break
-                    }
-                    if(gameArray.value[i][colIndex]) {
-                        break
-                    }
-                }
-            }
-        }
-    }
+const flipGameVertically = () => {
+    gameArray.value = gameArray.value.reverse();
+}
+
+function flipGameHorizontally() {
+    gameArray.value = gameArray.value.map(s => s.reverse())
+}
+
+function moveDown() {
+    flipGameVertically();
+    moveUp();
+    flipGameVertically();
 }
 
 function moveLeft() {
-    let alreadyMergedRow = Array.from({ length: 4 }, () => Array(4).fill(false));
+    let alreadyMergedRow = Array.from({length: 4}, () => Array(4).fill(false));
 
     gameArray.value.forEach((row, rowIndex) => {
         row.forEach((cell, colIndex) => {
@@ -226,33 +230,9 @@ function moveLeft() {
 }
 
 function moveRight() {
-    let alreadyMergedRow = Array.from({ length: 4 }, () => Array(4).fill(false));
-
-    for (let rowIndex = 0; rowIndex <= 3; rowIndex++) {
-        for (let colIndex = 2; colIndex >= 0; colIndex--) {
-            let cell = gameArray.value[rowIndex][colIndex];
-            if (cell && colIndex !== 3) {
-                for (let i = colIndex + 1; i <= 3; i++) {
-                    if (gameArray.value[rowIndex][i] === undefined) {
-                        gameArray.value[rowIndex][i] = cell;
-                        gameArray.value[rowIndex][i - 1] = undefined;
-                        tilesMoved = true
-                        continue;
-                    }
-                    if (gameArray.value[rowIndex][i] === cell && !alreadyMergedRow[rowIndex][i]) {
-                        gameArray.value[rowIndex][i] = cell + cell;
-                        gameArray.value[rowIndex][i - 1] = undefined;
-                        alreadyMergedRow[rowIndex][i] = true;
-                        tilesMoved = true
-                        break;
-                    }
-                    if (gameArray.value[rowIndex][i]) {
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    flipGameHorizontally()
+    moveLeft()
+    flipGameHorizontally()
 }
 
 
@@ -265,7 +245,7 @@ function moveRight() {
             <div
                 v-for="(cell, i) in flatGameArray"
                 :key="i"
-                class="flex items-center justify-center font-bold rounded-lg "
+                class="flex items-center justify-center font-bold rounded-lg font-mono text-2xl text-black/70"
                 :class="getCellColour(cell)"
             >
                 {{ cell }}
