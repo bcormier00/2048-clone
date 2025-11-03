@@ -1,7 +1,31 @@
 <script setup>
 
-import {computed, onBeforeUnmount, ref} from "vue";
+/**
+ * things to do:
+ * Game over modal
+ * handle new game
+ * score counter
+ * prevent highscore alteration in local storage - maybe this waits for backend
+ * gamestate in local storage
+ */
+
+
+import {computed, onBeforeUnmount, ref, watch} from "vue";
 import {onMounted} from "vue";
+
+onMounted(() => {
+    window.addEventListener("keydown", handleKeydown)
+    try {
+        const highScoreFromStorage = localStorage.getItem("highScore")
+        highScore.value = Number(highScoreFromStorage) ?? 0
+    }
+    catch {}
+})
+
+onBeforeUnmount(() => {
+    window.removeEventListener("keydown", handleKeydown)
+})
+
 
 // const gameOverScenario = [
 //     [2, 4, 8, 2048],
@@ -10,21 +34,17 @@ import {onMounted} from "vue";
 //     [512, 1024, 32, 2048],
 // ]
 
+//     [2, undefined, undefined, undefined],
+//     [undefined, undefined, undefined, undefined],
+//     [undefined, undefined, undefined, undefined],
+//     [undefined, undefined, undefined, undefined],
+
 const gameArray = ref([
-    [2, undefined, 2048, 2048],
     [2, undefined, undefined, undefined],
-    [4, undefined, undefined, undefined],
-    [4, undefined, undefined, undefined],
-
+    [undefined, undefined, undefined, undefined],
+    [undefined, undefined, undefined, undefined],
+    [undefined, undefined, undefined, undefined],
 ])
-
-onMounted(() => {
-    window.addEventListener("keydown", handleKeydown)
-})
-
-onBeforeUnmount(() => {
-    window.removeEventListener("keydown", handleKeydown)
-})
 
 const flatGameArray = computed(() => gameArray.value.flat())
 
@@ -32,9 +52,20 @@ const isGameOver = computed(() => {
     return checkForNoAvailableMerges()
 });
 
+const currentScore = ref(0)
+const highScore = ref(0)
+
 let tilesMoved = false
 
-
+watch(currentScore, (score) => {
+    if(score > highScore.value) {
+        highScore.value = score
+        try {
+            localStorage.setItem("highScore", String(score))
+        }
+        catch {}
+    }
+})
 function handleKeydown(event) {
     if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
         event.preventDefault();
@@ -157,6 +188,14 @@ function getCellColour(cellValue) {
     }
 }
 
+const flipGameVertically = () => {
+    gameArray.value = gameArray.value.reverse();
+}
+
+function flipGameHorizontally() {
+    gameArray.value = gameArray.value.map(s => s.reverse())
+}
+
 function moveUp() {
     let alreadyMergedColumn = Array.from({length: 4}, () => Array(4).fill(false));
 
@@ -172,6 +211,7 @@ function moveUp() {
                     }
                     if (gameArray.value[i][colIndex] === cell && !alreadyMergedColumn[i][colIndex]) {
                         gameArray.value[i][colIndex] = cell + cell //if i cell is the same as cell, combine
+                        currentScore.value += cell + cell
                         gameArray.value[i + 1][colIndex] = undefined
                         alreadyMergedColumn[i][colIndex] = true
                         tilesMoved = true
@@ -184,14 +224,6 @@ function moveUp() {
             }
         })
     })
-}
-
-const flipGameVertically = () => {
-    gameArray.value = gameArray.value.reverse();
-}
-
-function flipGameHorizontally() {
-    gameArray.value = gameArray.value.map(s => s.reverse())
 }
 
 function moveDown() {
@@ -215,6 +247,7 @@ function moveLeft() {
                     }
                     if (gameArray.value[rowIndex][i] === cell && !alreadyMergedRow[rowIndex][i]) {
                         gameArray.value[rowIndex][i] = cell + cell;
+                        currentScore.value += cell + cell
                         gameArray.value[rowIndex][i + 1] = undefined;
                         alreadyMergedRow[rowIndex][i] = true;
                         tilesMoved = true
@@ -239,16 +272,22 @@ function moveRight() {
 </script>
 
 <template>
-    <div class="flex items-center justify-center min-h-screen ">
-        <div v-if="isGameOver" class="text-4xl font-semibold">Game Over!!!</div>
-        <div class="grid grid-cols-4 grid-rows-4 shadow-lg rounded-lg p-2 gap-2 w-[500px] h-[500px] bg-board">
-            <div
-                v-for="(cell, i) in flatGameArray"
-                :key="i"
-                class="flex items-center justify-center font-bold rounded-lg font-mono text-2xl text-black/70"
-                :class="getCellColour(cell)"
-            >
-                {{ cell }}
+    <div class="flex flex-col items-center justify-center min-h-screen ">
+        <div class="flex flex-col items-start space-y-1">
+            <div v-if="isGameOver" class="text-4xl font-semibold">Game Over!!!</div>
+            <div class="flex w-full justify-between">
+                <div class="text-2xl font-semibold">Current Score: {{ currentScore }}</div>
+                <div class="text-2xl font-semibold">High Score: {{ highScore }}</div>
+            </div>
+            <div class="grid grid-cols-4 grid-rows-4 shadow-lg rounded-lg p-2 gap-2 w-[500px] h-[500px] bg-board">
+                <div
+                    v-for="(cell, i) in flatGameArray"
+                    :key="i"
+                    class="flex items-center justify-center font-bold rounded-lg font-mono text-2xl text-black/70"
+                    :class="getCellColour(cell)"
+                >
+                    {{ cell }}
+                </div>
             </div>
         </div>
     </div>
