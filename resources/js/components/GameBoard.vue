@@ -4,20 +4,20 @@
  * things to do:
  * Game over modal
  * handle new game
- * score counter
  * prevent highscore alteration in local storage - maybe this waits for backend
  * gamestate in local storage
+ * gamestate array as objects not numbers
  */
 
 
-import {computed, onBeforeUnmount, ref, watch} from "vue";
-import {onMounted} from "vue";
+import {computed, onBeforeUnmount, ref, watch, onMounted} from "vue";
+import GameOverModal from "@/components/GameOverModal.vue";
 
 onMounted(() => {
     window.addEventListener("keydown", handleKeydown)
     try {
         const highScoreFromStorage = localStorage.getItem("highScore")
-        highScore.value = Number(highScoreFromStorage) ?? 0
+        highScore.value = Number(highScoreFromStorage)
     }
     catch {}
 })
@@ -40,10 +40,10 @@ onBeforeUnmount(() => {
 //     [undefined, undefined, undefined, undefined],
 
 const gameArray = ref([
-    [2, undefined, undefined, undefined],
-    [undefined, undefined, undefined, undefined],
-    [undefined, undefined, undefined, undefined],
-    [undefined, undefined, undefined, undefined],
+    [2, 2, 8, 2048],
+    [32, 8, 4, 4096],
+    [128, 2, 8, 16],
+    [512, 1024, 32, 2048],
 ])
 
 const flatGameArray = computed(() => gameArray.value.flat())
@@ -268,13 +268,28 @@ function moveRight() {
     flipGameHorizontally()
 }
 
+function startNewGame() {
+    resetGameBoard()
+    spawnTile()
+}
+
+function resetGameBoard() {
+    gameArray.value = [
+        [undefined, undefined, undefined, undefined],
+        [undefined, undefined, undefined, undefined],
+        [undefined, undefined, undefined, undefined],
+        [undefined, undefined, undefined, undefined]
+    ];
+}
 
 </script>
 
 <template>
-    <div class="flex flex-col items-center justify-center min-h-screen ">
+    <div
+        class="flex flex-col items-center justify-center min-h-screen"
+        :class="[isGameOver ? 'blur-sm' : 'blur-none']"
+    >
         <div class="flex flex-col items-start space-y-1">
-            <div v-if="isGameOver" class="text-4xl font-semibold">Game Over!!!</div>
             <div class="flex w-full justify-between">
                 <div class="text-2xl font-semibold">Current Score: {{ currentScore }}</div>
                 <div class="text-2xl font-semibold">High Score: {{ highScore }}</div>
@@ -291,4 +306,11 @@ function moveRight() {
             </div>
         </div>
     </div>
+    <game-over-modal
+        v-if="isGameOver"
+        :score="currentScore"
+        :highScore="highScore"
+        @closeModal="startNewGame"
+    >
+    </game-over-modal>
 </template>
