@@ -3,7 +3,6 @@
 /**
  * things to do:
  * Game over modal - make this not look like shit
- * prevent highscore alteration in local storage - maybe this waits for backend
  * gamestate in local storage
  * gamestate array as objects not numbers
  */
@@ -14,11 +13,24 @@ import GameOverModal from "@/components/GameOverModal.vue";
 
 onMounted(() => {
     window.addEventListener("keydown", handleKeydown)
+
     try {
         const highScoreFromStorage = localStorage.getItem("highScore")
         highScore.value = Number(highScoreFromStorage)
+
+        const gameState = JSON.parse(localStorage.getItem("gameState"))
+
+        if (gameState.board) {
+
+            gameArray.value = gameState.board.map(row =>
+                row.map(cell => cell === null ? undefined : cell)
+            )
+            currentScore.value = gameState.score
+        }
     }
-    catch {}
+    catch {
+        startNewGame()
+    }
 })
 
 onBeforeUnmount(() => {
@@ -39,10 +51,10 @@ onBeforeUnmount(() => {
 //     [undefined, undefined, undefined, undefined],
 
 const gameArray = ref([
-    [2, 2, 8, 2048],
-    [32, 8, 4, 4096],
-    [128, 2, 8, 16],
-    [512, 1024, 32, 2048],
+    [undefined, undefined, undefined, undefined],
+    [undefined, undefined, undefined, undefined],
+    [undefined, undefined, undefined, undefined],
+    [undefined, undefined, undefined, undefined],
 ])
 
 const flatGameArray = computed(() => gameArray.value.flat())
@@ -65,6 +77,25 @@ watch(currentScore, (score) => {
         catch {}
     }
 })
+
+watch(
+    [gameArray, currentScore],
+    ([newGameArray, newScore]) => {
+        const gameState = JSON.stringify({
+            board: newGameArray,
+            score: newScore,
+        })
+
+        try {
+            localStorage.setItem('gameState', gameState)
+        } catch {}
+    },
+    {
+        deep: true,
+    }
+)
+
+
 function handleKeydown(event) {
     if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
         event.preventDefault();
