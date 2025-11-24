@@ -2,8 +2,7 @@
 
 /**
  * things to do:
- * Game over modal
- * handle new game
+ * Game over modal - make this not look like shit
  * prevent highscore alteration in local storage - maybe this waits for backend
  * gamestate in local storage
  * gamestate array as objects not numbers
